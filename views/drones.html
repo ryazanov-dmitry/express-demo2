@@ -1,0 +1,53 @@
+<html>
+<head>
+
+    <style>
+        .drone-container ol {
+            list-style: none;
+        }
+    
+        .drone-image-container {
+            width: 30%;
+            display: inline-block;
+        }
+    
+        .drone-image {
+            border-radius: 5%;
+            width: 100%;
+        }
+    
+        .drone-info-container {
+            display: inline-block;
+            width: 30%;
+            vertical-align: top;
+        }
+    
+        .drone-info-list {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div>
+        <ol>
+            {{#drones}}
+            <li>
+                <div>
+                    <div class="drone-image-container">
+                        <img class="drone-image" src="{{img}}">
+                    </div>
+                    <div class="drone-info-container">
+                        <ol class="drone-info-list">
+                            <li>Name: {{name}}</li>
+                            <li>Location: {{lat}},<br/> {{long}}</li>
+                        </ol>
+                    </div>
+                </div>
+            </li>
+           {{/drones}}
+        </ol>
+    </div>
+</body>
+</html>
