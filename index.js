@@ -2,6 +2,9 @@ const express = require('express')
 const bodyParser = require('body-parser');
 const querystring = require('querystring');
 const mustache = require('mustache-express');
+var mysql = require('./db');
+
+
 const app = express()
 const port = 3999
 
@@ -9,35 +12,37 @@ const port = 3999
 app.engine('html', mustache());
 app.set('view engine', 'html');
 app.set('views', __dirname + '/views');
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'))
 
 
 app.get('/dynamic/:template', (req, res) => {
   var template = req.params.template;
 
-  if(template == 'datetime.html'){
-    res.render(template, { currentDatetime: new Date()})
+  if (template == 'datetime.html') {
+    res.render(template, { currentDatetime: new Date() })
   }
 
-  if(template == 'drones.html'){
-    res.render(template, availableDrones);
+  if (template == 'drones.html') {
+    mysql.queryDrones(data => {
+      res.render(template, { drones: data });
+    });
   }
 
 });
 
 app.post('/order-drone', (req, res) => {
   var droneName = req.body.droneName;
-  
-  
-  var result = availableDrones.drones.find(x=> x.name == droneName);
-  if(result == undefined){
+
+
+  var result = availableDrones.drones.find(x => x.name == droneName);
+  if (result == undefined) {
     res.send('404');
     return;
   }
 
-  var index = availableDrones.drones.findIndex(x=>x.name == droneName);
-  availableDrones.drones.splice(index,1);
+  var index = availableDrones.drones.findIndex(x => x.name == droneName);
+  availableDrones.drones.splice(index, 1);
 
   ordered.push(result);
 
