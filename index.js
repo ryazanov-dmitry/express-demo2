@@ -2,9 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser');
 const querystring = require('querystring');
 const mustache = require('mustache-express');
-var mysql = require('./db');
-
-
+var dbClient = require('./db');
 const app = express()
 const port = 3999
 
@@ -24,9 +22,10 @@ app.get('/dynamic/:template', (req, res) => {
   }
 
   if (template == 'drones.html') {
-    mysql.queryDrones(data => {
-      res.render(template, { drones: data });
-    });
+
+    dbClient.queryDrones(dataFromDB =>
+      res.render(template, { drones: dataFromDB })
+    );
   }
 
 });
@@ -34,19 +33,33 @@ app.get('/dynamic/:template', (req, res) => {
 app.post('/order-drone', (req, res) => {
   var droneName = req.body.droneName;
 
+  dbClient.orderDrone(droneName, (response) => {
+    if (response.affectedRows != 1) {
+      res.send('404');
+      return;
+    }
 
-  var result = availableDrones.drones.find(x => x.name == droneName);
-  if (result == undefined) {
-    res.send('404');
-    return;
-  }
+    res.send('Drone ordered!');
+  });
 
-  var index = availableDrones.drones.findIndex(x => x.name == droneName);
-  availableDrones.drones.splice(index, 1);
+});
 
-  ordered.push(result);
+app.post('/release', (req, res) => {
+  dbClient.orderedCount((response) => {
+    if(response[0].count == 0){
+      res.send('No drone to release');
+      return;
+    }
 
-  res.send('Drone ordered!');
+    dbClient.release((response)=>{
+      if(response.affectedRows != 1){
+        res.send("Error");
+        return;
+      }
+
+      res.send("Drone released");
+    })
+  });
 });
 
 
@@ -65,35 +78,3 @@ app.listen(port, () => {
 })
 
 
-var ordered = [];
-
-var availableDrones =
-{
-  drones: [
-    {
-      name: 'BeeDrone',
-      lat: -38.71568,
-      long: 166.25189,
-      img: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8ZHJvbmV8ZW58MHx8MHx8&auto=format&fit=crop&w=500&q=60"
-    },
-    {
-      name: 'Adorable Sensors',
-      lat: 44.94397,
-      long: -45.89169,
-      img: "https://images.unsplash.com/photo-1508444845599-5c89863b1c44?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8M3x8ZHJvbmV8ZW58MHx8MHx8&auto=format&fit=crop&w=500&q=60"
-    },
-    {
-      name: 'Blue Twirls',
-      lat: -79.35272,
-      long: -69.26030,
-      img: "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NXx8ZHJvbmV8ZW58MHx8MHx8&auto=format&fit=crop&w=500&q=60"
-
-    },
-    {
-      name: 'Bright Skies',
-      lat: -19.13399,
-      long: 123.54286,
-      img: "https://images.unsplash.com/photo-1479152471347-3f2e62a2b2a7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTB8fGRyb25lfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60"
-    }
-  ]
-};
